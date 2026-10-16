@@ -19,6 +19,9 @@ class Go2Trot(LeggedRobot):
         self.phase = torch.zeros(
             self.num_envs, 1, dtype=torch.float, device=self.device
         )
+        self.height_cmd = torch.full(
+            (self.num_envs, 1), 0.3, dtype=torch.float, device=self.device
+        )
         self.phase_obs = torch.zeros(
             self.num_envs, 2, dtype=torch.float, device=self.device
         )
@@ -48,6 +51,7 @@ class Go2Trot(LeggedRobot):
             dtype=torch.float,
             device=self.device,
         )
+        
         self._update_phase_observation()
         self._update_gait_reference()
 
@@ -118,6 +122,10 @@ class Go2Trot(LeggedRobot):
             )
             self.commands.masked_fill_(drop, 0.0)
 
+        rand_height = torch_rand_float(self.command_ranges["base_height"][0], self.command_ranges["base_height"][1], (self.num_envs, 1), self.device)
+        masked_update(self.height_cmd, rand_height, command_mask)
+        # breakpoint()
+
     def _reset_idx(self, reset_mask):
         super()._reset_idx(reset_mask)
         self.dof_pos_target.masked_fill_(reset_mask.unsqueeze(1), 0.0)
@@ -185,6 +193,13 @@ class Go2Trot(LeggedRobot):
     def _reward_lin_vel_z(self):
         """Penalize z axis base linear velocity with squared exp"""
         return self._sqrdexp(self.base_lin_vel[:, 2] / self.scales["base_lin_vel"])
+
+    def _reward_height_cmd(self):
+        """Penalize height from cmd height with squared exp"""
+        error = (self.base_height - self.height_cmd).flatten() / 0.1
+        error /= self.scales["height_cmd"]
+        return self._sqrdexp(error) 
+    
 
     def _reward_ang_vel_xy(self):
         """Penalize xy axes base angular velocity"""

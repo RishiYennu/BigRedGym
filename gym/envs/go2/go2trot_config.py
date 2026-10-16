@@ -59,12 +59,13 @@ class Go2TrotCfg(Go2Cfg):
 
     class commands(Go2Cfg.commands):
         # Standard deviation in m/s around the forward-command centers below.
-        var = 0.1
+        var = 0.0 # 0.1
 
         class ranges(Go2Cfg.commands.ranges):
-            lin_vel_x = [-0.5, 0.0, 0.5, 1.0, 2.0]
-            lin_vel_y = 0.5
-            yaw_vel = 1.5
+            lin_vel_x = [0.0, 0.0] # [-0.5, 0.0, 0.5, 1.0, 2.0]
+            lin_vel_y = 0.0 # 0.5
+            yaw_vel = 0.0 # 1.5
+            base_height = [0.24, 0.39]
 
     class push_robots(Go2Cfg.push_robots):
         toggle = True
@@ -99,6 +100,7 @@ class Go2TrotCfg(Go2Cfg):
         # Canonical RobotLayout order is FL, FR, RL, RR, with
         # hip, thigh, calf inside each leg. Backends map native order to it.
         base_height = 0.3
+        height_cmd = base_height
         dof_pos = 4 * [1.0472, 2.53075, 0.94247]
         dof_pos_obs = dof_pos
         # Residual radians per policy unit, independent of observation ranges.
@@ -120,6 +122,7 @@ class Go2TrotRunnerCfg(Go2RunnerCfg):
             "dof_pos_target",
             "phase_obs",
             "phase_frequency",
+            "height_cmd",
         ]
         normalize_obs = False
         smooth_exploration = False
@@ -152,6 +155,7 @@ class Go2TrotRunnerCfg(Go2RunnerCfg):
             "dof_pos_target",
             "phase_obs",
             "phase_frequency",
+            "height_cmd",
         ]
         normalize_obs = False
 
@@ -161,19 +165,20 @@ class Go2TrotRunnerCfg(Go2RunnerCfg):
                 tracking_ang_vel = 4.0
                 lin_vel_z = 0.0
                 ang_vel_xy = 0.01
-                orientation = 1.0
+                orientation = 3.0
                 torques = 5.0e-6
                 dof_vel = 0.0
                 stand_still = 0.0
                 dof_pos_limits = 0.0
                 feet_contact_forces = 0.0
                 dof_near_home = 0.0
-                min_base_height = 0.5
+                min_base_height = 0
                 action_rate = 0.1
                 action_rate2 = 0.05
                 trot_support = 3.0
                 swing_contact = 3.0
-                reference_traj = 3.0
+                reference_traj = 1.0
+                height_cmd = 5
 
             class termination_weight:
                 termination = 0.01

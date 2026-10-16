@@ -16,6 +16,9 @@ import torch
 
 from gym.utils.helpers import set_seed
 from gym.utils.task_registry import task_registry
+import matplotlib
+matplotlib.use("Agg") 
+import matplotlib.pyplot as plt
 
 
 def get_play_args(argv=None):
@@ -131,16 +134,34 @@ def setup(args):
 
 
 def play(env, runner):
+    times, cmds, actuals = [], [], []
     n_steps = 10 * int(env.max_episode_length)
-    for _ in range(n_steps):
-        runner.set_actions(
-            runner.actor_cfg["actions"],
-            runner.get_inference_actions(),
-            runner.actor_cfg["disable_actions"],
-        )
-        env.step()
-        env.check_exit()
-
+    try: 
+        for i in range(n_steps):
+            runner.set_actions(
+                runner.actor_cfg["actions"],
+                runner.get_inference_actions(),
+                runner.actor_cfg["disable_actions"],
+            )
+            env.step()
+            print(f"cmd {env.height_cmd[0].item():.3f}   actual {env.base_height[0].item():.3f}")
+            times.append(i * env.dt)
+            cmds.append(env.height_cmd[0].item())
+            actuals.append(env.base_height[0].item())
+            # print(env.base_height[0].item())
+            env.check_exit()
+    finally: 
+        plt.figure(figsize=(8, 4))
+        plt.plot(times, cmds, label="Commanded height", drawstyle="steps-post")
+        plt.plot(times, actuals, label="Actual height")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Base height (m)")
+        plt.title("Base height tracking")
+        plt.legend()
+        plt.grid(alpha=0.3)
+        plt.tight_layout()
+        plt.savefig("height_tracking.pdf")
+        
 
 if __name__ == "__main__":
     args = get_play_args()
